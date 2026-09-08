@@ -1,0 +1,63 @@
+<html>
+    <head>
+        <style>
+        /* Centers everything on the screen */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f4f4f9;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            text-align: center;
+            color: #333;
+        }
+        h4 {
+            margin-bottom: 20px;
+            text-align: center;
+            color: #c14848;
+        }
+
+        label {
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        input {
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        </style>
+    </head>
+    <body>
+        <form action="/students" method="POST">
+            <h2>
+                <label>Student Info Form</label>
+            </h2>
+            <br>
+            <label>Enter Name</label>&nbsp; &nbsp;<input id="name" name="name" size="10">
+            <br>
+            <label>Enter grades</label>&nbsp; &nbsp;<input id="grades" name="grades" size="10">
+            <br>
+            <button type="submit">Save</button> &nbsp; &nbsp;
+            <button type="button" onclick="clearSingleInput()">Clear</button>
+        </form>
+        <br>
+        <form action="/students" method="GET">
+            <button type="submit">View Data</button>
+        </form>
+        <br>
+        {% if result %}
+            <h4>Error Message : {{ result }}</h4>
+        {% endif %}
+    </body>
+    <script>
+    function clearSingleInput() {
+        // Target the specific textbox and clear it
+        document.getElementById("name").value = "";
+        document.getElementById("grades").value = "";
+    }
+    </script>
+</html>
