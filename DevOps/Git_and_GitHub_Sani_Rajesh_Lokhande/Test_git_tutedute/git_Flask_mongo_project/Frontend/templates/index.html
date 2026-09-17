@@ -1,0 +1,53 @@
+<html>
+    <head>
+        <style>
+        /* Centers everything on the screen */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f4f4f9;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            text-align: center;
+            color: #333;
+        }
+        h4 {
+            margin-bottom: 20px;
+            text-align: center;
+            color: #c14848;
+        }
+
+        label {
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        input {
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        </style>
+    </head>
+    <body>
+        <form action="/items" method="POST">
+            <h2>
+                <label>Item Form</label>
+            </h2>
+            <br>
+            <label>Enter Item ID</label>&nbsp; &nbsp;<input id="i_id" name="i_id" size="10">
+            <br>
+            <label>Enter Item UUID</label>&nbsp; &nbsp;<input id="uuid" name="uuid" size="10">
+            <br>
+            <label>Enter Item hash</label>&nbsp; &nbsp;<input id="hash" name="hash" size="10">
+            <br>
+            <label>Enter Item Name</label>&nbsp; &nbsp;<input id="name" name="name" size="10">
+            <br>
+            <label>Enter Item Description</label>&nbsp; &nbsp;<input id="des" name="des" size="10">
+            <br>
+            <button type="submit">Save</button> &nbsp; &nbsp;
+        </form>
+    </body>
+</html>
