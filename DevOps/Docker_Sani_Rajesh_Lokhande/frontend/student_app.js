@@ -3,6 +3,7 @@ const path = require('path');
 const app = express();
 const PORT = 3000;
 const BACKEND_URL = process.env.BACKEND_URL;
+console.log(BACKEND_URL);
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));

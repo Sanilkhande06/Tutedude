@@ -19,9 +19,11 @@ services:
     ports:
       - "8901:3000"
     volumes:
+      - .:/app
+      - /app/node_modules 
       - ./frontend:/app
     environment:
-      - BACKEND_URL=http://backend_host:8900/students
+      - BACKEND_URL=http://backend_host:4000/students
     links:
       - backend
     depends_on:
