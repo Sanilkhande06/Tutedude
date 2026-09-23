@@ -4,7 +4,7 @@ from pymongo import MongoClient
 from urllib.parse import quote_plus
 
 
-class Items:
+class Students:
     def __init__(self):
         load_dotenv()
         uri = os.getenv("MONGO_URI")
@@ -15,21 +15,21 @@ class Items:
         client = MongoClient(MONGO_URI)
 
         db = client["Tutedude_assignments"]
-        self.items_col = db["Items"]
-        print(self.items_col)
+        self.student_col = db["Students"]
+        print(self.student_col)
 
-    def insert(self, item_info):
-        result = self.items_col.insert_one(item_info)
+    def insert(self, student_info):
+        result = self.student_col.insert_one(student_info)
         print(result)
 
     def get_data(self):
-        data = self.items_col.find()
-        item_data = []
-        for item in data:
-            item_data.append({
-            "id": str(item["_id"]),
-            "name": item.get("name"),
-            "des": item.get("description")
+        data = self.student_col.find()
+        student_data = []
+        for stud_data in data:
+            student_data.append({
+            "id": str(stud_data["_id"]),
+            "name": stud_data.get("name"),
+            "grades": stud_data.get("grades")
         })
-        print(item_data)
-        return item_data
+        print(student_data)
+        return student_data
