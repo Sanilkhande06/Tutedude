@@ -1,35 +1,35 @@
 import os
+import json
 from dotenv import load_dotenv
-from pymongo import MongoClient
 from urllib.parse import quote_plus
 
 
 class Students:
     def __init__(self):
         load_dotenv()
-        uri = os.getenv("MONGO_URI")
-        username = os.getenv("MONGO_USERNAME")
-        password = quote_plus(os.getenv("MONGO_PASSWORD"))
-        host = os.getenv("MONGO_HOST")
-        MONGO_URI = f"{uri}{username}:{password}@{host}"
-        client = MongoClient(MONGO_URI)
-
-        db = client["Tutedude_assignments"]
-        self.student_col = db["Students"]
-        print(self.student_col)
+        self.student_file = os.getenv("STUDENT_DB")
 
     def insert(self, student_info):
-        result = self.student_col.insert_one(student_info)
-        print(result)
+        student_data = {}
+        with open(self.student_file, "r") as file:
+            student_data = json.load(file)
+        if not student_data.get("student_info") :
+            student_data["student_info"] = []
+        else:
+            for student in student_data["student_info"]:
+                if student["id"] == student_info["stud_id"]:
+                    print("Student information already exists")
+                    return
+        student_data["student_info"].append({
+            "id" : student_info["stud_id"],
+            "name" : student_info["stud_name"],
+            "grades" : student_info["stud_grades"]
+        })
+        with open(self.student_file, "w") as file:
+            json.dump(student_data, file)
+        print("Student information added successfully")
 
     def get_data(self):
-        data = self.student_col.find()
-        student_data = []
-        for stud_data in data:
-            student_data.append({
-            "id": str(stud_data["_id"]),
-            "name": stud_data.get("name"),
-            "grades": stud_data.get("grades")
-        })
-        print(student_data)
-        return student_data
+        with open(self.student_file, "r") as file:
+            student_data = json.load(file)
+        return student_data["student_info"]

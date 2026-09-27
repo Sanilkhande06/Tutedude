@@ -15,7 +15,7 @@ app.post('/students', async (req, res) => {
   console.log(req.body);
   student_data = {
     stud_id: req.body.Sid,
-    stud_name: req.body.Sname,
+    stud_name: req.body.Sname,  
     stud_grades: req.body.Sgrades
   };
   console.log(student_data);
