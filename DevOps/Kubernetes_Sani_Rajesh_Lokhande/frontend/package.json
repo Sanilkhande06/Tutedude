@@ -1,0 +1,14 @@
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "student_app.js",
+  "scripts": {
+    "start": "node student_app.js"
+  },
+  "author": "Sani Rajesh Lokhande",
+  "dependencies": {
+    "express": "^5.2.1",
+    "dotenv": "^18.0.3"
+  }
+}
