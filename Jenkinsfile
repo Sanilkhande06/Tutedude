@@ -6,7 +6,7 @@ pipeline {
                 sh '''
                     pwd
                     ls -la
-                    cd /home/sani/DevOps/Jenkins_CICD_Sani_Rajesh_Lokhande/
+                    cd DevOps/Jenkins_CICD_Sani_Rajesh_Lokhande/frontend
                     ls -la
 
                     echo "Deploying backend"
