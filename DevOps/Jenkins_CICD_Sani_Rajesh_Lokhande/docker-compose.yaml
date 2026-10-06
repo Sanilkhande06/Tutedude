@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    hostname: backend_host
+    ports:
+      - "8900:4000"
+    volumes:
+      - ./backend:/app
+    networks:
+      - student_network
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8901:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules 
+      - ./frontend:/app
+    environment:
+      - BACKEND_URL=http://backend_host:4000/students
+    links:
+      - backend
+    depends_on:
+      - backend
+    networks:
+      - student_network
+
+networks:
+  student_network:
+    driver: bridge
