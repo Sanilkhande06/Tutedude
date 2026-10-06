@@ -12,7 +12,7 @@ pipeline {
                     echo "Deploying backend"
                     sudo systemctl daemon-reload
                     sudo systemctl restart student_flask_app.service
-                    sudo systemctl status student_flask_app.service --no-pager
+                    sudo systemctl status student_flask_app.service
 
                     echo "deploying frontend 5nd time"
                     pm2 start student_app.js --name 'express-frontend'
