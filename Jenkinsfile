@@ -14,7 +14,7 @@ pipeline {
                     sudo systemctl restart student_flask_app.service
                     sudo systemctl status student_flask_app.service --no-pager
 
-                    echo "deploying frontend 2nd time"
+                    echo "deploying frontend 5nd time"
                     pm2 start student_app.js --name 'express-frontend'
                 '''
             }
