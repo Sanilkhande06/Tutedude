@@ -23,6 +23,11 @@
           - npm
         state: present
         update_cache: true
+    # Clean old deployment directory
+    - name: Clean old deployment directory
+      ansible.builtin.file:
+        path: "{{ backend_app_dir }}"
+        state: absent
 
     # 2. CREATE APPLICATION DIRECTORY
     - name: Ensure the application directory exists
@@ -38,6 +43,14 @@
         dest: "{{ app_dir }}"
         version: main # Change to your default branch name (e.g., master)
         force: yes
+
+    # FORCE EXPLICIT GIT PULL
+    - name: Force git fetch and pull from origin main
+      ansible.builtin.shell: |
+        git fetch --all
+        git reset --hard origin/main
+      args:
+        chdir: "{{ backend_app_dir }}"
 
     # 4. SETUP PYTHON VENV AND FLASK INSIDE THE APP FOLDER
     - name: Create Python venv and install dependencies inside application folder
