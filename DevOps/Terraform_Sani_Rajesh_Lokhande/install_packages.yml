@@ -74,8 +74,9 @@
       ansible.builtin.systemd:
         daemon_reload: yes
 
+    # 6. START AND ENABLE THE FLASK SERVICE
     - name: Ensure Flask service is started and enabled on boot
       ansible.builtin.systemd:
-        name: flaskapp
+        name: student_flask_app_terraform
         state: started
         enabled: yes
