@@ -1,0 +1,67 @@
+---
+- name: Clear Docker Environment, Build Images, and Push to AWS ECR
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    aws_region: "eu-north-1"
+    aws_account_id: "881893827429"
+    project_directory: "/home/ubuntu/Tutedude/DevOps/Jenkins_CICD_Sani_Rajesh_Lokhande"
+    backend_repo: "{{ aws_account_id }}.dkr.ecr.{{ aws_region }}://"
+    frontend_repo: "{{ aws_account_id }}.dkr.ecr.{{ aws_region }}://"
+
+  tasks:
+    - name: Stop and remove existing Docker Compose running infrastructure
+      community.docker.docker_compose_v2:
+        project_src: "{{ project_directory }}"
+        state: absent
+      failed_when: false
+
+    - name: Force prune all unused containers, images, and builder caches
+      community.docker.docker_prune:
+        containers: true
+        images: true
+        builder_cache: true
+
+    - name: Retrieve AWS ECR temporary login token locally
+      ansible.builtin.command:
+        cmd: "aws ecr get-login-password --region {{ aws_region }}"
+      register: ecr_token
+      changed_when: false
+
+    - name: Extract clean ECR domain from repository URL
+      ansible.builtin.set_fact:
+        # This replaces any 'https://', splits by '/', and grabs just the base domain name
+        ecr_domain: "{{ backend_repo | replace('https://', '') | replace('http://', '') | split('/') | first }}"
+
+    - name: Authenticate local Docker client into AWS ECR
+      community.docker.docker_login:
+        registry_url: "{{ ecr_domain }}" # 💡 Fixed: Added the missing closing quote here
+        username: AWS
+        password: "{{ ecr_token.stdout }}"
+        reauthorize: true
+      environment:
+        AWS_ACCESS_KEY_ID: "{{ lookup('ansible.builtin.env', 'AWS_ACCESS_KEY_ID') }}"
+        AWS_SECRET_ACCESS_KEY: "{{ lookup('ansible.builtin.env', 'AWS_SECRET_ACCESS_KEY') }}"
+
+    - name: Execute Docker Compose build sequence to construct fresh images
+      ansible.builtin.shell: |
+        docker compose build --no-cache
+      args:
+        chdir: "{{ project_directory }}"
+
+    - name: Tag and push Backend image to AWS ECR
+      community.docker.docker_image:
+        name: "jenkins_cicd_sani_rajesh_lokhande-backend:latest"
+        repository: "{{ backend_repo }}"
+        tag: "latest"
+        push: true
+        source: local
+
+    - name: Tag and push Frontend image to AWS ECR
+      community.docker.docker_image:
+        name: "jenkins_cicd_sani_rajesh_lokhande-frontend:latest"
+        repository: "{{ frontend_repo }}"
+        tag: "latest"
+        push: true
+        source: local

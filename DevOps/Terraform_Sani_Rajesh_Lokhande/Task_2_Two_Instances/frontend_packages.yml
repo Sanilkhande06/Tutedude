@@ -6,7 +6,6 @@
     # Update these values with your actual details
     repo_url: "https://github.com/Sanilkhande06/Tutedude.git"
     app_dir: "/home/ubuntu/student_app"
-    backend_app_dir: "/home/ubuntu/student_app/DevOps/Jenkins_CICD_Sani_Rajesh_Lokhande/backend"
     frontend_app_dir: "/home/ubuntu/student_app/DevOps/Jenkins_CICD_Sani_Rajesh_Lokhande/frontend"
 
   tasks:
@@ -16,17 +15,15 @@
       ansible.builtin.apt:
         name:
           - git
-          - python3
-          - python3-pip
-          - python3-venv
           - nodejs
           - npm
         state: present
         update_cache: true
+
     # Clean old deployment directory
     - name: Clean old deployment directory
       ansible.builtin.file:
-        path: "{{ backend_app_dir }}"
+        path: "{{ frontend_app_dir }}"
         state: absent
 
     # 2. CREATE APPLICATION DIRECTORY
@@ -50,33 +47,36 @@
         git fetch --all
         git reset --hard origin/main
       args:
-        chdir: "{{ backend_app_dir }}"
-
-    # 4. SETUP PYTHON VENV AND FLASK INSIDE THE APP FOLDER
-    - name: Create Python venv and install dependencies inside application folder
-      ansible.builtin.pip:
-        name:
-          - flask
-          - python-dotenv
-        virtualenv: "{{ backend_app_dir }}/venv"
-        virtualenv_command: python3 -m venv
+        chdir: "{{ frontend_app_dir }}"
+    
+    # 7. INSTALL PM2 GLOBALLY
+    - name: Install PM2 globally via NPM
+      community.general.npm:
+        name: pm2
+        global: yes
         state: present
 
-    # 5. CONFIGURE SYSTEMD SERVICE FOR FLASK USING YOUR CLONED FILE
-    - name: Copy systemd service file from the backend repository to system systemd folder
+    # INSTALL DOTENV IN EXPRESS APP DIRECTORY
+    - name: Install dotenv package inside frontend directory
+      community.general.npm:
+        name: dotenv
+        path: "{{ frontend_app_dir }}"
+        state: present
+    
+    # NEW: CREATE OR OVERWRITE .ENV FILE DYNAMICALLY BEFORE RUNNING THE APP
+    - name: Dynamically write frontend .env file configurations
       ansible.builtin.copy:
-        src: "{{ backend_app_dir }}/student_flask_app_terraform.service" # Location inside your cloned repo
-        dest: /etc/systemd/system/student_flask_app_terraform.service     # System location
-        remote_src: yes                               # Tells Ansible the source file is already on the remote host
-        mode: '0644'
+        dest: "{{ frontend_app_dir }}/.env"
+        mode: '0600' # Restricts file permissions for security reasons
+        content: |
+          BACKEND_HOST=16.171.199.210
+          BACKEND_PORT=5000
 
-    - name: Reload systemd daemon to recognize the new service
-      ansible.builtin.systemd:
-        daemon_reload: yes
-
-    # 6. START AND ENABLE THE FLASK SERVICE
-    - name: Ensure Flask service is started and enabled on boot
-      ansible.builtin.systemd:
-        name: student_flask_app_terraform
-        state: started
-        enabled: yes
+    # 8. START/RESTART THE FRONTEND APPLICATION WITH PM2
+    - name: Ensure the Frontend app is running under PM2
+      ansible.builtin.shell: |
+        pm2 start npm --name "frontend-app" -- start
+      args:
+        chdir: "{{ frontend_app_dir }}"
+      environment:
+        NODE_ENV: production

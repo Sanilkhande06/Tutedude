@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     hostname: backend_host
     ports:
-      - "8900:4000"
+      - "4000:4000"
     volumes:
       - ./backend:/app
     networks:
@@ -17,13 +17,14 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "8901:3000"
+      - "3000:3000"
     volumes:
       - .:/app
       - /app/node_modules 
       - ./frontend:/app
     environment:
-      - BACKEND_URL=http://backend_host:4000/students
+      - BACKEND_HOST=backend_host
+      - BACKEND_PORT=4000
     links:
       - backend
     depends_on:

@@ -61,7 +61,7 @@ resource "aws_instance" "sani_test_tf_instance" {
 # 5. GENERATE THE ANSIBLE INVENTORY FILE DYNAMICALLY
 resource "local_file" "ansible_inventory" {
   content = templatefile("${path.module}/templates/hosts.tpl", {
-    web_ips = aws_instance.sani_test_tf_instance.public_ip
+    web_ips = [aws_instance.sani_test_tf_instance.public_ip]
   })
   filename = "${path.module}/hosts" # Automatically creates 'hosts' in your root directory
 }

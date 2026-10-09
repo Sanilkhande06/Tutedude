@@ -1,0 +1,80 @@
+---
+- name: Setup Application Folder and Git Repository
+  hosts: webservers
+  become: true
+  vars:
+    # Update these values with your actual details
+    repo_url: "https://github.com/Sanilkhande06/Tutedude.git"
+    app_dir: "/home/ubuntu/student_app"
+    backend_app_dir: "/home/ubuntu/student_app/DevOps/Jenkins_CICD_Sani_Rajesh_Lokhande/backend"
+
+  tasks:
+
+    # 1. INSTALL SYSTEM PACKAGES
+    - name: Update apt cache and install Core System Packages
+      ansible.builtin.apt:
+        name:
+          - git
+          - python3
+          - python3-pip
+          - python3-venv
+        state: present
+        update_cache: true
+
+    # Clean old deployment directory
+    - name: Clean old deployment directory
+      ansible.builtin.file:
+        path: "{{ backend_app_dir }}"
+        state: absent
+
+    # 2. CREATE APPLICATION DIRECTORY
+    - name: Ensure the application directory exists
+      ansible.builtin.file:
+        path: "{{ app_dir }}"
+        state: directory
+        mode: '0755'
+
+    # 3. PULL GIT REPOSITORY
+    - name: Clone the Git repository into the application folder
+      ansible.builtin.git:
+        repo: "{{ repo_url }}"
+        dest: "{{ app_dir }}"
+        version: main # Change to your default branch name (e.g., master)
+        force: yes
+
+    # FORCE EXPLICIT GIT PULL
+    - name: Force git fetch and pull from origin main
+      ansible.builtin.shell: |
+        git fetch --all
+        git reset --hard origin/main
+      args:
+        chdir: "{{ backend_app_dir }}"
+
+    # 4. SETUP PYTHON VENV AND FLASK INSIDE THE APP FOLDER
+    - name: Create Python venv and install dependencies inside application folder
+      ansible.builtin.pip:
+        name:
+          - flask
+          - python-dotenv
+        virtualenv: "{{ backend_app_dir }}/venv"
+        virtualenv_command: python3 -m venv
+        state: present
+
+    # 5. CONFIGURE SYSTEMD SERVICE FOR FLASK USING YOUR CLONED FILE
+    - name: Copy systemd service file from the backend repository to system systemd folder
+      ansible.builtin.copy:
+        src: "{{ backend_app_dir }}/student_flask_app_terraform.service" # Location inside your cloned repo
+        dest: /etc/systemd/system/student_flask_app_terraform.service     # System location
+        remote_src: yes                               # Tells Ansible the source file is already on the remote host
+        mode: '0644'
+
+    - name: Reload systemd daemon to recognize the new service
+      ansible.builtin.systemd:
+        daemon_reload: yes
+
+    # 6. START AND ENABLE THE FLASK SERVICE
+    - name: Ensure Flask service is started and enabled on boot
+      ansible.builtin.systemd:
+        name: student_flask_app_terraform
+        state: started
+        enabled: yes

@@ -1,0 +1,5 @@
+ini
+[webservers]
+%{ for ip in web_ips ~}
+${ip} ansible_user=ubuntu
+%{ endfor ~}
