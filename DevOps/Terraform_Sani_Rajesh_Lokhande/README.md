@@ -76,10 +76,12 @@ Terraform_Sani_Rajesh_Lokhande/
 │
 └── README.md
 
+```
 
 Prerequisites
 Ensure you have installed and configured the following on your machine:
 
+```sh
 AWS CLI (v2.x): Configured with valid IAM credentials (aws configure)
 
 Terraform: >= 1.5.0
@@ -87,6 +89,7 @@ Terraform: >= 1.5.0
 Docker Engine: Installed and running locally
 
 Git
+```
 
 Terraform State Management (S3 Backend)
 All three projects maintain independent remote state files in Amazon S3 to prevent accidental state corruption, enable collaboration, and isolate environments.
@@ -94,11 +97,13 @@ All three projects maintain independent remote state files in Amazon S3 to preve
 1. One-Time Bucket Creation
 Run the AWS CLI command to create the bucket once (replace with your globally unique bucket name):
 
-Bash
+```sh
 aws s3 mb s3://sani-terraform-state-bucket-2026 --region eu-north-1
+```
 2. Backend Declarations
 Each part points to this bucket using a dedicated key path inside its respective main.tf:
 
+```sh
 Part 1:
 
 Terraform
@@ -109,6 +114,8 @@ terraform {
     region = "eu-north-1"
   }
 }
+```
+```sh
 Part 2:
 
 Terraform
@@ -119,6 +126,8 @@ terraform {
     region = "eu-north-1"
   }
 }
+```
+```sh
 Part 3:
 
 Terraform
@@ -129,7 +138,11 @@ terraform {
     region = "eu-north-1"
   }
 }
+```
+
+
 Part 1: Monolithic Deployment on a Single EC2
+
 Objective
 Provisions a single EC2 instance using Terraform. A user_data.sh script automates the installation of system packages (Python, pip, Node.js, npm) and runs both applications concurrently on different ports.
 
@@ -137,19 +150,17 @@ Express Frontend: Port 3000
 
 Flask Backend: Port 5000
 
-Task_1_Single_Instance
-Task_2_Two_Instances
-Task_3_Docker_AWS_Services
-
 Deployment Steps
-Bash
+
+```sh
 cd Task_1_Single_Instance
 terraform init
 terraform plan
 terraform apply tfplan
 Outputs & Verification
+```
 
-Bash
+```sh
 # Get the instance public IP
 INSTANCE_IP=$(terraform output -raw server_public_ip)
 
@@ -159,35 +170,42 @@ curl http://${INSTANCE_IP}:3000
 # Test the Flask Backend
 curl http://${INSTANCE_IP}:5000/students
 
+```
 
 Part 2: Decoupled Multi-EC2 Deployment with Custom VPC
+
 Objective
 Decouples the frontend and backend onto two separate EC2 instances within a custom Virtual Private Cloud (VPC). Network security is enforced using least-privilege Security Groups:
 
+```sh
 Express SG: Allows inbound HTTP traffic on port 3000 from the internet (0.0.0.0/0).
+```
 
 Flask SG: Allows inbound traffic on port 5000 strictly from the Express Security Group ID, isolating the backend API from direct internet access.
 
 Deployment Steps
-Bash
+```sh
 cd ../Task_2_Two_Instances
 terraform init
 terraform plan 
 terraform apply 
-
+```
 Outputs & Verification
-Bash
+
+```sh
 EXPRESS_IP=$(terraform output -raw server_public_ip[0])
 FLASK_IP=$(terraform output -raw server_public_ip[1])
+```
 
-# Query Express application (Public)
+### Query Express application (Public)
+
 curl http://${EXPRESS_IP}:3000
 
-# Test Flask Backend directly (should succeed only if allowed by SG or tested from within the VPC)
+### Test Flask Backend directly (should succeed only if allowed by SG or tested from within the VPC)
 curl http://${FLASK_IP}:5000/students
 
 
-Part 3: Containerized Microservices via ECR, ECS & ALB
+# Part 3: Containerized Microservices via ECR, ECS & ALB
 Objective
 Packages the Flask backend and Express frontend as Docker containers, pushes the images to Amazon ECR repositories, and deploys them to Amazon ECS using AWS Fargate behind an Application Load Balancer (ALB).
 
@@ -200,38 +218,42 @@ Application Load Balancer (ALB): Single public entry point routing requests base
 Deployment Steps
 Step 3.1: Create ECR Repositories
 
-Bash
+```sh
 cd ../Task_3_Docker_AWS_Services
 terraform init
 terraform apply -auto-approve
+```
+
 Step 3.2: Build, Tag, and Push Docker Images
-Bash
+```sh
 AWS_REGION="eu-north-1"
 AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 ECR_FLASK_URL=$(terraform output -raw flask_ecr_repository_url)
 ECR_EXPRESS_URL=$(terraform output -raw express_ecr_repository_url)
+```
 
-# Authenticate Docker daemon to Amazon ECR
+## Authenticate Docker daemon to Amazon ECR
 aws ecr get-login-password --region $AWS_REGION | \
   docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
 
-# Build and push Flask Backend
+## Build and push Flask Backend
 docker build -t flask-backend ../app/backend
 docker tag flask-backend:latest ${ECR_FLASK_URL}:latest
 docker push ${ECR_FLASK_URL}:latest
 
-# Build and push Express Frontend
+## Build and push Express Frontend
 docker build -t express-frontend ../app/frontend
 docker tag express-frontend:latest ${ECR_EXPRESS_URL}:latest
 docker push ${ECR_EXPRESS_URL}:latest
 Step 3.3: Deploy Networking, ALB, and ECS Services
 
-Bash
+```sh
 terraform plan -out=tfplan
 terraform apply tfplan
 Outputs & Verification
+```
 
-Bash
+```sh
 # Get the Application Load Balancer DNS name
 ALB_DNS=$(terraform output -raw alb_dns_name)
 
@@ -240,3 +262,4 @@ curl http://${ALB_DNS}/
 
 # Access Flask Backend API (Path-based route)
 curl http://${ALB_DNS}/api
+```
