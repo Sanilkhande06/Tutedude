@@ -92,14 +92,14 @@ resource "aws_security_group" "sani_test_tf_sg" {
     description = "HTTP web traffic"
     from_port   = 3000
     to_port     = 5500
-    protocol    = "tcp"5
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
     from_port   = 0
     to_port     = 0
-    protocol    = "-1" # Allows all outbound traffic from inside the server to the internet
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
@@ -221,7 +221,7 @@ resource "aws_lb" "student_LB" {
     Name = "sani-app-alb"
   }
 }
-no
+
 resource "aws_lb_target_group" "backend_tg" {
   name        = "sani-backend-tg"
   port        = 5000

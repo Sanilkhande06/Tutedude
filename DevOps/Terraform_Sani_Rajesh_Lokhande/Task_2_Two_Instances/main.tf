@@ -16,11 +16,59 @@ provider "aws" {
   secret_key = var.secret_key
 }
 
+resource "aws_vpc" "test_sani_vpc" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+
+  tags = {
+    Name = "test-sani-vpc"
+  }
+}
+
+resource "aws_subnet" "public_subnet" {
+  vpc_id                  = aws_vpc.test_sani_vpc.id
+  cidr_block              = "10.0.1.0/24"
+  map_public_ip_on_launch = true
+  availability_zone       = "eu-north-1a"
+
+  tags = {
+    Name = "sani-public-subnet"
+  }
+}
+
+resource "aws_internet_gateway" "sani-igw" {
+  vpc_id = aws_vpc.test_sani_vpc.id
+
+  tags = {
+    Name = "sani-internet-gateway"
+  }
+}
+
+resource "aws_route_table" "public_route_table" {
+  vpc_id = aws_vpc.test_sani_vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.sani-igw.id
+  }
+
+  tags = {
+    Name = "sani-public-route-table"
+  }
+}
+
+resource "aws_route_table_association" "public_assoc" {
+  subnet_id      = aws_subnet.public_subnet.id
+  route_table_id = aws_route_table.public_route_table.id
+}
+
+
 # 3. Define a Security Group (Firewall) Rule
 resource "aws_security_group" "sani_test_tf_sg" {
   name        = "sani_test_tf_sg"
   description = "Open common application network interface ports"
-
+  vpc_id      = aws_vpc.test_sani_vpc.id 
   ingress {
     description = "SSH access"
     from_port   = 22
@@ -51,6 +99,7 @@ resource "aws_instance" "sani_test_tf_instance" {
   count                  = 2 
   instance_type          = "t3.micro"   
   key_name               = "assignments"
+  subnet_id              = aws_subnet.public_subnet.id
   vpc_security_group_ids = [aws_security_group.sani_test_tf_sg.id]
 
   tags = {
